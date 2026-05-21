@@ -1,0 +1,103 @@
+import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { listVisaUploads, type VisaUploadRow } from '../lib/api'
+import { formatDate } from '../lib/format'
+
+type Status = 'pending' | 'approved' | 'rejected'
+
+export default function VisaListPage() {
+  const [status, setStatus] = useState<Status>('pending')
+  const [rows, setRows] = useState<VisaUploadRow[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      setLoading(true)
+      setError(null)
+      try {
+        const res = await listVisaUploads(status)
+        if (cancelled) return
+        setRows(res.data ?? [])
+      } catch (e: any) {
+        if (cancelled) return
+        setError(e?.message ?? String(e))
+      } finally {
+        if (cancelled) return
+        setLoading(false)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [status])
+
+  const title = useMemo(() => {
+    if (status === 'pending') return 'Pending visas'
+    if (status === 'approved') return 'Approved visas'
+    return 'Rejected visas'
+  }, [status])
+
+  return (
+    <div>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-xl font-semibold">{title}</h1>
+          <p className="mt-1 text-sm text-white/60">
+            Click a row to preview via a short-lived signed URL.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <select
+            className="rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm outline-none"
+            value={status}
+            onChange={(e) => setStatus(e.target.value as Status)}
+          >
+            <option value="pending">Pending</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+          </select>
+        </div>
+      </div>
+
+      {error ? (
+        <div className="mt-4 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-200">
+          {error}
+        </div>
+      ) : null}
+
+      <div className="mt-4 overflow-hidden rounded-2xl border border-white/10">
+        <div className="grid grid-cols-12 gap-2 bg-white/5 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-white/60">
+          <div className="col-span-2">ID</div>
+          <div className="col-span-6">R2 key</div>
+          <div className="col-span-4">Created</div>
+        </div>
+
+        {loading ? (
+          <div className="px-4 py-6 text-sm text-white/70">Loading…</div>
+        ) : rows.length === 0 ? (
+          <div className="px-4 py-6 text-sm text-white/70">No rows.</div>
+        ) : (
+          <div className="divide-y divide-white/10">
+            {rows.map((r) => (
+              <Link
+                key={r.id}
+                to={`/visas/${r.id}`}
+                className="grid grid-cols-12 gap-2 px-4 py-3 text-sm hover:bg-white/5"
+              >
+                <div className="col-span-2 text-white/80">#{r.id}</div>
+                <div className="col-span-6 truncate font-mono text-xs text-white/70">
+                  {r.r2_key}
+                </div>
+                <div className="col-span-4 text-white/60">{formatDate(r.created_at)}</div>
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
