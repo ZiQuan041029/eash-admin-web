@@ -1,6 +1,15 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { approveVisaUpload, rejectVisaUpload, showVisaUpload } from '../lib/api'
+import {
+  cardClass,
+  errorBox,
+  inputClass,
+  linkBack,
+  mutedText,
+  panelClass,
+  statusBadge,
+} from '../lib/ui'
 
 export default function VisaDetailPage() {
   const nav = useNavigate()
@@ -41,49 +50,37 @@ export default function VisaDetailPage() {
     <div>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Link to="/visas" className="text-sm text-white/70 hover:text-white">
+          <Link to="/visas" className={linkBack}>
             ← Back
           </Link>
-          <h1 className="text-xl font-semibold">Visa #{id}</h1>
-          {status ? (
-            <span className="rounded-full bg-white/10 px-2 py-0.5 text-xs text-white/70">
-              {status}
-            </span>
-          ) : null}
+          <h1 className="text-xl font-semibold text-slate-900">Visa #{id}</h1>
+          {status ? <span className={statusBadge}>{status}</span> : null}
         </div>
       </div>
 
-      {error ? (
-        <div className="mt-4 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-200">
-          {error}
-        </div>
-      ) : null}
+      {error ? <div className={`mt-4 ${errorBox}`}>{error}</div> : null}
 
       {loading ? (
-        <div className="mt-4 text-sm text-white/70">Loading…</div>
+        <div className={`mt-4 ${mutedText}`}>Loading…</div>
       ) : (
         <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <div className="overflow-hidden rounded-2xl border border-white/10 bg-black/20">
+          <div className={panelClass}>
             {signedUrl ? (
-              <img
-                src={signedUrl}
-                className="block w-full"
-                alt="Visa preview"
-              />
+              <img src={signedUrl} className="block w-full" alt="Visa preview" />
             ) : (
-              <div className="p-6 text-sm text-white/70">No signed URL.</div>
+              <div className={`p-6 ${mutedText}`}>No signed URL.</div>
             )}
-            <div className="border-t border-white/10 p-3 text-xs text-white/60">
+            <div className="border-t border-slate-200 p-3 text-xs text-slate-500">
               Signed URL expires soon — refresh page if it breaks.
             </div>
           </div>
 
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-            <div className="text-sm font-semibold">Decision</div>
+          <div className={cardClass}>
+            <div className="text-sm font-semibold text-slate-900">Decision</div>
             <div className="mt-2">
-              <div className="text-xs text-white/60">Admin note (optional)</div>
+              <div className="text-xs text-slate-500">Admin note (optional)</div>
               <textarea
-                className="mt-1 h-28 w-full resize-none rounded-lg border border-white/10 bg-black/30 p-3 text-sm outline-none focus:border-white/20"
+                className={`${inputClass} mt-1 h-28 resize-none`}
                 value={adminNote}
                 onChange={(e) => setAdminNote(e.target.value)}
               />
@@ -92,7 +89,7 @@ export default function VisaDetailPage() {
             <div className="mt-3 flex gap-2">
               <button
                 disabled={saving}
-                className="rounded-lg bg-emerald-400 px-3 py-2 text-sm font-semibold text-black hover:bg-emerald-300 disabled:opacity-60"
+                className="rounded-lg bg-emerald-600 px-3 py-2 text-sm font-semibold text-white hover:bg-emerald-500 disabled:opacity-60"
                 onClick={async () => {
                   setSaving(true)
                   try {
@@ -109,7 +106,7 @@ export default function VisaDetailPage() {
               </button>
               <button
                 disabled={saving}
-                className="rounded-lg bg-red-400 px-3 py-2 text-sm font-semibold text-black hover:bg-red-300 disabled:opacity-60"
+                className="rounded-lg bg-red-600 px-3 py-2 text-sm font-semibold text-white hover:bg-red-500 disabled:opacity-60"
                 onClick={async () => {
                   setSaving(true)
                   try {
@@ -131,4 +128,3 @@ export default function VisaDetailPage() {
     </div>
   )
 }
-

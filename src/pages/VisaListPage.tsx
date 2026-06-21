@@ -2,6 +2,16 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { listVisaUploads, type VisaUploadRow } from '../lib/api'
 import { formatDate } from '../lib/format'
+import {
+  errorBox,
+  inputClass,
+  mutedText,
+  pageSubtitle,
+  panelClass,
+  tableDivideClass,
+  tableHeadClass,
+  tableRowHover,
+} from '../lib/ui'
 
 type Status = 'pending' | 'approved' | 'rejected'
 
@@ -43,15 +53,15 @@ export default function VisaListPage() {
     <div>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold">{title}</h1>
-          <p className="mt-1 text-sm text-white/60">
+          <h1 className="text-xl font-semibold text-slate-900">{title}</h1>
+          <p className={pageSubtitle}>
             Click a row to preview via a short-lived signed URL.
           </p>
         </div>
 
         <div className="flex items-center gap-2">
           <select
-            className="rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm outline-none"
+            className={inputClass}
             value={status}
             onChange={(e) => setStatus(e.target.value as Status)}
           >
@@ -62,36 +72,32 @@ export default function VisaListPage() {
         </div>
       </div>
 
-      {error ? (
-        <div className="mt-4 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-200">
-          {error}
-        </div>
-      ) : null}
+      {error ? <div className={`mt-4 ${errorBox}`}>{error}</div> : null}
 
-      <div className="mt-4 overflow-hidden rounded-2xl border border-white/10">
-        <div className="grid grid-cols-12 gap-2 bg-white/5 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-white/60">
+      <div className={`mt-4 ${panelClass}`}>
+        <div className={`${tableHeadClass} grid-cols-12`}>
           <div className="col-span-2">ID</div>
           <div className="col-span-6">R2 key</div>
           <div className="col-span-4">Created</div>
         </div>
 
         {loading ? (
-          <div className="px-4 py-6 text-sm text-white/70">Loading…</div>
+          <div className={`px-4 py-6 ${mutedText}`}>Loading…</div>
         ) : rows.length === 0 ? (
-          <div className="px-4 py-6 text-sm text-white/70">No rows.</div>
+          <div className={`px-4 py-6 ${mutedText}`}>No rows.</div>
         ) : (
-          <div className="divide-y divide-white/10">
+          <div className={tableDivideClass}>
             {rows.map((r) => (
               <Link
                 key={r.id}
                 to={`/visas/${r.id}`}
-                className="grid grid-cols-12 gap-2 px-4 py-3 text-sm hover:bg-white/5"
+                className={`grid grid-cols-12 gap-2 px-4 py-3 text-sm text-slate-800 ${tableRowHover}`}
               >
-                <div className="col-span-2 text-white/80">#{r.id}</div>
-                <div className="col-span-6 truncate font-mono text-xs text-white/70">
+                <div className="col-span-2 font-medium">#{r.id}</div>
+                <div className="col-span-6 truncate font-mono text-xs text-slate-500">
                   {r.r2_key}
                 </div>
-                <div className="col-span-4 text-white/60">{formatDate(r.created_at)}</div>
+                <div className="col-span-4 text-slate-500">{formatDate(r.created_at)}</div>
               </Link>
             ))}
           </div>
@@ -100,4 +106,3 @@ export default function VisaListPage() {
     </div>
   )
 }
-

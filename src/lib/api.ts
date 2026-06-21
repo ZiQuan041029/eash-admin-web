@@ -45,10 +45,16 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
   const data = await parseJson(res)
 
   if (!res.ok) {
-    const msg =
+    let msg =
       typeof data?.message === 'string'
         ? data.message
         : `Request failed (${res.status})`
+    if (data?.errors && typeof data.errors === 'object') {
+      const first = Object.values(data.errors as Record<string, string[]>)[0]
+      if (Array.isArray(first) && first[0]) {
+        msg = first[0]
+      }
+    }
     throw { message: msg, status: res.status } satisfies ApiError
   }
   return data as T
@@ -111,6 +117,123 @@ export async function rejectVisaUpload(id: number, adminNote?: string) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ admin_note: adminNote ?? null }),
+  })
+}
+
+export type Amenity = {
+  id: number
+  name: string
+  slug: string
+  icon: string
+  is_active: boolean
+  sort_order: number
+}
+
+export type RestaurantImage = {
+  id?: number
+  restaurant_id?: number
+  url: string
+  sort_order: number
+}
+
+export type Restaurant = {
+  id: number
+  name: string
+  slug: string
+  subtitle: string | null
+  address: string | null
+  contact_number: string | null
+  latitude: number | null
+  longitude: number | null
+  postal_code: string | null
+  rating: number | null
+  operating_hours: string[] | null
+  qr_data: string | null
+  is_active: boolean
+  images?: RestaurantImage[]
+  amenities?: Amenity[]
+  amenity_ids?: number[]
+  created_at?: string
+  updated_at?: string
+}
+
+export type RestaurantPayload = {
+  name: string
+  slug?: string | null
+  subtitle?: string | null
+  address?: string | null
+  contact_number?: string | null
+  latitude?: number | null
+  longitude?: number | null
+  postal_code?: string | null
+  rating?: number | null
+  operating_hours?: string[] | null
+  qr_data?: string | null
+  is_active?: boolean
+  amenity_ids?: number[]
+  images?: { url: string; sort_order?: number }[]
+}
+
+export async function listAmenities() {
+  return apiFetch<Amenity[]>('/api/admin/amenities')
+}
+
+export type AmenityPayload = {
+  name: string
+  icon: string
+  is_active?: boolean
+  sort_order?: number
+}
+
+export async function createAmenity(payload: AmenityPayload) {
+  return apiFetch<Amenity>('/api/admin/amenities', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+}
+
+export async function updateAmenity(id: number, payload: Partial<AmenityPayload>) {
+  return apiFetch<Amenity>(`/api/admin/amenities/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+}
+
+export async function deleteAmenity(id: number) {
+  return apiFetch<{ ok: true }>(`/api/admin/amenities/${id}`, {
+    method: 'DELETE',
+  })
+}
+
+export async function listRestaurants() {
+  return apiFetch<Paginated<Restaurant>>('/api/admin/restaurants')
+}
+
+export async function showRestaurant(id: number) {
+  return apiFetch<Restaurant>(`/api/admin/restaurants/${id}`)
+}
+
+export async function createRestaurant(payload: RestaurantPayload) {
+  return apiFetch<Restaurant>('/api/admin/restaurants', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+}
+
+export async function updateRestaurant(id: number, payload: RestaurantPayload) {
+  return apiFetch<Restaurant>(`/api/admin/restaurants/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+}
+
+export async function deleteRestaurant(id: number) {
+  return apiFetch<{ ok: true }>(`/api/admin/restaurants/${id}`, {
+    method: 'DELETE',
   })
 }
 
